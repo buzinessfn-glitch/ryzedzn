@@ -408,6 +408,81 @@
             border-color: var(--fire-gold);
         }
 
+        /* --- PRICING SECTION --- */
+        #pricing {
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .pricing-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .price-card {
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            padding: 40px 30px;
+            border-radius: 20px;
+            width: 320px;
+            backdrop-filter: blur(10px);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-card:hover {
+            transform: translateY(-15px);
+            border-color: var(--fire-gold);
+            box-shadow: 0 15px 40px rgba(138, 43, 226, 0.2);
+        }
+
+        .price-card h3 {
+            font-size: 1.4rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .price-tag {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(to bottom, var(--fire-gold), var(--fire-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .price-desc {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            min-height: 3em;
+        }
+
+        .price-card.featured {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.2);
+        }
+
+        .featured-label {
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: var(--neon-purple);
+            color: white;
+            padding: 5px 40px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            transform: rotate(45deg);
+        }
+
         /* --- LIGHTBOX (ENLARGING) --- */
         #lightbox {
             position: fixed;
@@ -520,6 +595,7 @@
         <a href="#stats-section">Stats</a>
         <a href="#clients">Clients</a>
         <a href="#work-section">Portfolio</a>
+        <a href="#pricing">Pricing</a>
     </nav>
 
     <section id="hero-wrapper">
@@ -569,6 +645,35 @@
         <div class="carousel-controls">
             <button class="c-btn" id="prevBtn">&larr;</button>
             <button class="c-btn" id="nextBtn">&rarr;</button>
+        </div>
+    </section>
+
+    <section id="pricing">
+        <h2 class="section-title">PRICING</h2>
+        <p class="section-sub">Invest in Quality</p>
+
+        <div class="pricing-grid">
+            <div class="price-card">
+                <h3>Fortnite Thumbnail</h3>
+                <div class="price-tag">£6</div>
+                <p class="price-desc">A thumbnail to make your video truly stand out.</p>
+                <a href="https://discord.com/users/1235663774938038332" target="_blank" class="btn-fire" style="padding: 10px; font-size: 0.7rem;">Order Now</a>
+            </div>
+
+            <div class="price-card featured">
+                <div class="featured-label">POPULAR</div>
+                <h3>Fortnite Comp</h3>
+                <div class="price-tag">£9</div>
+                <p class="price-desc">Grab the most attention for your video.</p>
+                <a href="https://discord.com/users/1235663774938038332" target="_blank" class="btn-fire" style="padding: 10px; font-size: 0.7rem;">Order Now</a>
+            </div>
+
+            <div class="price-card">
+                <h3>Infinite Pack</h3>
+                <div class="price-tag">£40</div>
+                <p class="price-desc">All-you-can-order feast! Endless high-quality thumbnails for 1 month!</p>
+                <a href="https://discord.com/users/1235663774938038332" target="_blank" class="btn-fire" style="padding: 10px; font-size: 0.7rem;">Subscribe</a>
+            </div>
         </div>
     </section>
 
@@ -637,12 +742,12 @@
 
             // Dynamic hover delegation
             document.addEventListener('mouseenter', (e) => {
-                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close')) {
+                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close, .price-card')) {
                     cursor.classList.add('cursor-hover');
                 }
             }, true);
             document.addEventListener('mouseleave', (e) => {
-                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close')) {
+                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close, .price-card')) {
                     cursor.classList.remove('cursor-hover');
                 }
             }, true);
