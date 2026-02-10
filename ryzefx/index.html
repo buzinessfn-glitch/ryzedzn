@@ -248,6 +248,7 @@
             position: relative;
             text-align: center;
             border: 1px solid #333;
+            cursor: pointer;
         }
 
         .client-polaroid:hover {
@@ -332,6 +333,7 @@
             overflow: hidden;
             background: #000;
             position: relative;
+            cursor: pointer;
         }
 
         .work-card.active {
@@ -480,6 +482,9 @@
             box-shadow: 0 0 50px var(--neon-purple);
             border-radius: 8px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #lightbox.active .lightbox-content {
@@ -490,22 +495,32 @@
             display: block;
             width: 100%;
             height: auto;
-            max-height: 85vh;
+            max-height: 70vh;
             object-fit: contain;
         }
 
         .lightbox-close {
             position: absolute;
-            top: -50px;
-            right: 0;
+            top: 10px;
+            right: 15px;
             color: #fff;
             font-size: 2rem;
             font-weight: 300;
             transition: 0.3s;
+            z-index: 100;
+            cursor: pointer;
         }
 
         .lightbox-close:hover {
             color: var(--fire-orange);
+        }
+
+        .lightbox-btn-container {
+            padding: 20px;
+            background: #15101a;
+            width: 100%;
+            text-align: center;
+            display: none; /* Only show for clients */
         }
 
         /* --- SECTION TITLES --- */
@@ -644,8 +659,11 @@
 
     <div id="lightbox">
         <div class="lightbox-content">
-            <span class="lightbox-close">&times; Close</span>
+            <span class="lightbox-close">&times;</span>
             <img src="" id="lightbox-img" alt="Enlarged View">
+            <div class="lightbox-btn-container" id="lightbox-btn-container">
+                <a href="#" target="_blank" id="lightbox-link" class="btn-fire" style="font-size: 0.8rem; padding: 10px 30px;">Check him out</a>
+            </div>
         </div>
     </div>
 
@@ -658,13 +676,15 @@
     <script>
         // --- DATA ---
         const clients = [
-            { name: 'Wingu', pfp: 'wingupfp.jpg' },
-            { name: 'Nakoo', pfp: 'nakoopfp.jpg' },
-            { name: 'Tjino', pfp: 'tjinopfp.jpg' },
-            { name: 'SkySZN_', pfp: 'skypfp.jpg' },
-            { name: 'Cr1ngefn', pfp: 'cringepfp.jpg' },
-            { name: 'Velo', pfp: 'velopfp.jpg' },
-            { name: 'Momsy', pfp: 'momsypfp.jpg' }
+            { name: 'Wingu', pfp: 'wingupfp.jpg', x: 'https://x.com/PabloWingu' },
+            { name: 'Nakoo', pfp: 'nakoopfp.jpg', x: 'https://x.com/Nakoo' },
+            { name: 'Tjino', pfp: 'tjinopfp.jpg', x: 'https://x.com/Tjino9' },
+            { name: 'SkySZN_', pfp: 'skypfp.jpg', x: 'https://x.com/SkySZN_' },
+            { name: 'Cr1ngefn', pfp: 'cringepfp.jpg', x: 'https://x.com/Cr1ngefn_' },
+            { name: 'Velo', pfp: 'velopfp.jpg', x: 'https://x.com/Velofps_' },
+            { name: 'Momsy', pfp: 'momsypfp.jpg', x: 'https://x.com/MomsyFN' },
+            { name: 'mald1s', pfp: 'mald1spfp.jpg', x: 'https://x.com/Mald1sFNBR' },
+            { name: 'Focus', pfp: 'focuspfp.jpg', x: 'https://x.com/FoCuSFNBR_' }
         ];
 
         // 15 Work Images
@@ -721,6 +741,8 @@
             clients.forEach((c) => {
                 const div = document.createElement('div');
                 div.className = 'client-polaroid';
+                div.setAttribute('data-xlink', c.x);
+                div.setAttribute('data-isclient', 'true');
                 const randomRot = Math.random() * 12 - 6; 
                 div.style.transform = `rotate(${randomRot}deg)`;
                 div.innerHTML = `
@@ -781,16 +803,30 @@
             const lightbox = document.getElementById('lightbox');
             const lightboxImg = document.getElementById('lightbox-img');
             const closeBtn = document.querySelector('.lightbox-close');
+            const btnContainer = document.getElementById('lightbox-btn-container');
+            const lightboxLink = document.getElementById('lightbox-link');
 
             // Open lightbox on card click
             document.addEventListener('click', (e) => {
                 const card = e.target.closest('.work-card');
-                if (card) {
-                    const img = card.querySelector('img');
+                const client = e.target.closest('.client-polaroid');
+                
+                if (card || client) {
+                    const source = card || client;
+                    const img = source.querySelector('img');
                     lightboxImg.src = img.src;
+                    
+                    // If it's a client, show the X button
+                    if (source.hasAttribute('data-isclient')) {
+                        btnContainer.style.display = 'block';
+                        lightboxLink.href = source.getAttribute('data-xlink');
+                    } else {
+                        btnContainer.style.display = 'none';
+                    }
+
                     lightbox.style.display = 'flex';
                     setTimeout(() => lightbox.classList.add('active'), 10);
-                    document.body.style.overflow = 'hidden'; // Prevent scroll
+                    document.body.style.overflow = 'hidden';
                 }
             });
 
