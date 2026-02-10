@@ -490,7 +490,7 @@
 
     <section id="clients">
         <div style="text-align: center;">
-            <h2 class="section-title">TRUSTED BY</h2>
+            <h2 class="section-title">WORKED AND TRUSTED BY</h2>
             <p class="section-sub">____</p>
         </div>
         
@@ -531,8 +531,13 @@
             { name: 'Momsy', pfp: 'momsypfp.jpg' }
         ];
 
-        // 12 Work Images
-        const workImages = Array.from({length: 12}, (_, i) => `ryzework${i+1}.jpg`);
+        // --- UPDATED WORK IMAGE ORDER ---
+        const workImages = [
+            'ryzework14.jpg', 
+            'ryzework15.jpg', 
+            'ryzework13.jpg', 
+            ...Array.from({length: 12}, (_, i) => `ryzework${i+1}.jpg`)
+        ];
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -656,18 +661,7 @@
             function updateCarousel() {
                 // Determine card width + margin (680 + 40 = 720)
                 const cardWidth = 720; 
-                // Center the active card
-                const centerOffset = (track.parentElement.offsetWidth / 2) - (cardWidth / 2); // Approximation for alignment
-                
-                // For 3D effect, we just move the track to center the index
-                // But specifically we want to center the 'currentIndex' element
-                
-                // Simple translate strategy logic:
-                // We want cards[currentIndex] to be in the center.
-                // shift = -(currentIndex * cardWidth) + (containerWidth/2 - cardWidth/2)
-                
                 const containerW = track.parentElement.offsetWidth;
-                // Since cards are flexed, let's just calculate offset based on index
                 const offset = -(currentIndex * 720) + (containerW / 2) - (360); // 360 is half card width
 
                 track.style.transform = `translateX(${offset}px)`;
@@ -679,6 +673,7 @@
                     
                     if (i === currentIndex) {
                         card.classList.add('active');
+                        card.style.transform = 'scale(1) rotateY(0deg)';
                     } else if (i < currentIndex) {
                         card.style.transform = 'scale(0.8) rotateY(15deg)'; // Left side look
                     } else {
@@ -702,7 +697,6 @@
             });
 
             // Initial call
-            // Delay slightly to allow width calculation
             setTimeout(updateCarousel, 100);
             window.addEventListener('resize', updateCarousel);
         }
@@ -718,7 +712,6 @@
                 const progress = Math.min((timestamp - start) / duration, 1);
                 const current = Math.floor(progress * target);
                 
-                // Format with K if > 1000 for aesthetics, but user wants "Views Generated"
                 el.innerText = current.toLocaleString() + '+';
 
                 if (progress < 1) {
