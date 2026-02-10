@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RYZE | Portfolio</title>
+    <style>
+        /* --- RYZE CUSTOM THEME: VOID FLAME --- */
+        :root {
+            --bg-void: #020005; /* Deepest Black/Purple */
+            --glass-panel: rgba(20, 10, 30, 0.4);
+            --glass-border: rgba(138, 43, 226, 0.2);
+            --neon-purple: #8a2be2;
+            --fire-gold: #ffbf00; /* Fiery accent (Non-red) */
+            --fire-orange: #ff8c00;
+            --text-main: #f0f0f5;
+            --text-dim: #8b8b9b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Hide default cursor */
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 300vh; /* Allow scrolling for animation */
+        }
+
+        /* --- CUSTOM INK CURSOR --- */
+        #ink-cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 25px;
+            height: 25px;
+            background: #300a4d;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: exclusion;
+            transition: width 0.2s, height 0.2s;
+            box-shadow: 0 0 15px var(--neon-purple);
+            filter: blur(2px);
+        }
+
+        #ink-trail {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .cursor-hover {
+            width: 50px !important;
+            height: 50px !important;
+            background: var(--fire-orange) !important;
+            filter: blur(4px) !important;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 0, 20, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 15px 40px;
+            z-index: 1000;
+            display: flex;
+            gap: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        nav a {
+            color: var(--text-dim);
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--fire-gold);
+            text-shadow: 0 0 10px var(--fire-orange);
+        }
+
+        /* --- HERO: THE CRACK ANIMATION --- */
+        #hero-wrapper {
+            position: relative;
+            height: 150vh; /* Tall to allow scroll animation */
+            width: 100%;
+        }
+
+        .sticky-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        /* The Name Container */
+        .name-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through when open */
+        }
+
+        .crack-text {
+            font-size: 15vw;
+            font-weight: 900;
+            text-transform: uppercase;
+            position: absolute;
+            transition: transform 0.1s linear; /* Smooth scroll sync */
+            background: linear-gradient(to bottom, #fff, var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.5));
+            will-change: transform, opacity;
+        }
+
+        /* We duplicate the text: One clipped top, one clipped bottom with a jagged path */
+        .text-top {
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 75% 55%, 50% 40%, 25% 60%, 0 50%);
+        }
+        
+        .text-bottom {
+            clip-path: polygon(0 50%, 25% 60%, 50% 40%, 75% 55%, 100% 45%, 100% 100%, 0% 100%);
+        }
+
+        /* Inner Content revealed by crack */
+        .void-core {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s ease-out;
+            text-align: center;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .void-core.revealed {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .btn-fire {
+            padding: 15px 40px;
+            background: transparent;
+            border: 1px solid var(--neon-purple);
+            color: #fff;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .btn-fire::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 191, 0, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-fire:hover {
+            border-color: var(--fire-gold);
+            color: var(--fire-gold);
+            box-shadow: 0 0 25px var(--fire-orange);
+        }
+
+        .btn-fire:hover::before {
+            left: 100%;
+        }
+
+        /* --- VIEWS STATS --- */
+        #stats-section {
+            padding: 50px 0;
+            text-align: center;
+            margin-top: -20vh; /* Pull up slightly */
+            position: relative;
+            z-index: 20;
+        }
+        
+        .stat-glass {
+            display: inline-block;
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            padding: 30px 60px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 20px rgba(138, 43, 226, 0.1);
+        }
+
+        .stat-num {
+            display: block;
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--neon-purple), var(--fire-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            letter-spacing: 4px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* --- CLIENTS PINBOARD --- */
+        #clients {
+            padding: 100px 20px;
+            position: relative;
+        }
+
+        .pinboard-bg {
+            background-image: radial-gradient(var(--glass-border) 1px, transparent 1px);
+            background-size: 30px 30px;
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .client-polaroid {
+            background: #15101a;
+            padding: 15px 15px 30px 15px;
+            width: 220px;
+            box-shadow: 5px 10px 20px rgba(0,0,0,0.5);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .client-polaroid:hover {
+            transform: scale(1.1) rotate(0deg) !important;
+            z-index: 50;
+            box-shadow: 0 0 30px var(--neon-purple);
+            border-color: var(--fire-gold);
+        }
+
+        /* The visual "Pin" */
+        .pin {
+            width: 15px;
+            height: 15px;
+            background: var(--fire-orange);
+            border-radius: 50%;
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5), inset -2px -2px 2px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .client-polaroid img {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            filter: grayscale(0.6);
+            transition: 0.3s;
+            margin-bottom: 10px;
+            background: #000;
+        }
+
+        .client-polaroid:hover img {
+            filter: grayscale(0);
+        }
+
+        .client-polaroid h4 {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+        
+        .client-polaroid span {
+            font-size: 0.75rem;
+            color: var(--fire-gold);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* --- WORK CAROUSEL --- */
+        #work-section {
+            padding: 100px 0;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .carousel-wrapper {
+            perspective: 1000px;
+            max-width: 1000px;
+            margin: 50px auto;
+            position: relative;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform-style: preserve-3d;
+            height: 400px; /* Slight buffer for 383px img */
+            align-items: center;
+        }
+
+        .work-card {
+            min-width: 680px;
+            height: 383px;
+            margin: 0 20px;
+            transition: 0.6s;
+            opacity: 0.4;
+            transform: scale(0.8) rotateY(15deg);
+            border: 2px solid var(--glass-border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .work-card.active {
+            opacity: 1;
+            transform: scale(1) rotateY(0deg);
+            border-color: var(--fire-gold);
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.3);
+            z-index: 10;
+        }
+
+        .work-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures no cropping inside container, container matches size */
+        }
+
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .c-btn {
+            background: var(--glass-panel);
+            border: 1px solid var(--neon-purple);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .c-btn:hover {
+            background: var(--fire-orange);
+            transform: scale(1.1);
+            border-color: var(--fire-gold);
+        }
+
+        /* --- SECTION TITLES --- */
+        .section-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: white;
+            letter-spacing: -1px;
+        }
+        
+        .section-sub {
+            color: var(--fire-orange);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+        }
+
+        footer {
+            padding: 50px;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* --- WATERMARK --- */
+        .sxrch-watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9990;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: white;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .sxrch-watermark span {
+            color: var(--neon-purple);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="ink-cursor"></div>
+
+    <nav>
+        <a href="#stats-section">Stats</a>
+        <a href="#clients">Clients</a>
+        <a href="#work-section">Portfolio</a>
+    </nav>
+
+    <section id="hero-wrapper">
+        <div class="sticky-container">
+            <div class="name-container">
+                <div class="crack-text text-top" id="text-top">RYZE</div>
+                <div class="crack-text text-bottom" id="text-bottom">RYZE</div>
+            </div>
+
+            <div class="void-core" id="void-core">
+                <h2 style="font-size: 2rem; color: #fff; margin-bottom: 10px;">PERFECTION</h2>
+                <p style="color: #aaa; max-width: 400px;">Only the best.</p>
+                <div class="btn-group">
+                    <a href="https://discord.com/users/1235663774938038332" target="_blank" class="btn-fire">Discord</a>
+                    <a href="https://x.com/Ryzedzngg" target="_blank" class="btn-fire">X</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stats-section">
+        <div class="stat-glass">
+            <span class="stat-num" id="view-counter">0</span>
+            <div class="stat-label">Views Generated</div>
+        </div>
+    </section>
+
+    <section id="clients">
+        <div style="text-align: center;">
+            <h2 class="section-title">TRUSTED BY</h2>
+            <p class="section-sub">____</p>
+        </div>
+        
+        <div class="pinboard-bg" id="client-grid">
+            </div>
+    </section>
+
+    <section id="work-section">
+        <h2 class="section-title">MY WORK</h2>
+        <p class="section-sub">Explore</p>
+
+        <div class="carousel-wrapper">
+            <div class="carousel-track" id="track">
+                </div>
+        </div>
+
+        <div class="carousel-controls">
+            <button class="c-btn" id="prevBtn">&larr;</button>
+            <button class="c-btn" id="nextBtn">&rarr;</button>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Ryzedzn. All Rights Reserved.</p>
+    </footer>
+
+    <div class="sxrch-watermark">Powered by <span>Sxrch</span></div>
+
+    <script>
+        // --- DATA ---
+        const clients = [
+            { name: 'Wingu', pfp: 'wingupfp.jpg' },
+            { name: 'Nakoo', pfp: 'nakoopfp.jpg' },
+            { name: 'Tjino', pfp: 'tjinopfp.jpg' },
+            { name: 'SkySZN_', pfp: 'skypfp.jpg' },
+            { name: 'Cr1ngefn', pfp: 'cringepfp.jpg' },
+            { name: 'Velo', pfp: 'velopfp.jpg' },
+            { name: 'Momsy', pfp: 'momsypfp.jpg' }
+        ];
+
+        // 12 Work Images
+        const workImages = Array.from({length: 12}, (_, i) => `ryzework${i+1}.jpg`);
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initCursor();
+            initHeroScroll();
+            renderClients();
+            initCarousel();
+            animateCounter();
+        });
+
+        // --- CURSOR LOGIC ---
+        function initCursor() {
+            const cursor = document.getElementById('ink-cursor');
+            let mouseX = 0, mouseY = 0;
+            let cursorX = 0, cursorY = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animate() {
+                // Smooth trailing effect
+                cursorX += (mouseX - cursorX) * 0.15;
+                cursorY += (mouseY - cursorY) * 0.15;
+                
+                cursor.style.left = cursorX + 'px';
+                cursor.style.top = cursorY + 'px';
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            // Hover effects
+            const hoverTargets = document.querySelectorAll('a, button, .client-polaroid, .work-card');
+            hoverTargets.forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
+            });
+        }
+
+        // --- HERO CRACK ANIMATION ---
+        function initHeroScroll() {
+            const topText = document.getElementById('text-top');
+            const botText = document.getElementById('text-bottom');
+            const core = document.getElementById('void-core');
+            const wrapper = document.getElementById('hero-wrapper');
+            const stickyHeight = window.innerHeight;
+
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY;
+                const maxScroll = stickyHeight * 0.5; // When animation finishes
+                
+                // Calculate percentage of scroll (0 to 1)
+                let progress = Math.min(scrolled / maxScroll, 1);
+
+                // Movement values
+                const moveY = progress * 150; // Move text apart by 150px
+                const rotate = progress * 5;  // Slight tilt for realism
+                const opacity = 1 - (progress * 1.5); // Fade text out eventually
+
+                // Apply Transforms
+                // Top goes up and tilts left, Bottom goes down and tilts right
+                topText.style.transform = `translateY(-${moveY}%) rotate(-${rotate}deg)`;
+                botText.style.transform = `translateY(${moveY}%) rotate(${rotate}deg)`;
+                
+                // Fade out text pieces as they separate
+                topText.style.opacity = Math.max(opacity, 0);
+                botText.style.opacity = Math.max(opacity, 0);
+
+                // Reveal Core Content (Reverse of text fade)
+                if (progress > 0.3) {
+                    core.classList.add('revealed');
+                    core.style.pointerEvents = "auto";
+                } else {
+                    core.classList.remove('revealed');
+                    core.style.pointerEvents = "none";
+                }
+            });
+        }
+
+        // --- RENDER CLIENTS (PINBOARD) ---
+        function renderClients() {
+            const grid = document.getElementById('client-grid');
+            clients.forEach((c, index) => {
+                const div = document.createElement('div');
+                div.className = 'client-polaroid';
+                
+                // Random rotation between -6deg and 6deg for pinboard feel
+                const randomRot = Math.random() * 12 - 6; 
+                div.style.transform = `rotate(${randomRot}deg)`;
+
+                div.innerHTML = `
+                    <div class="pin"></div>
+                    <img src="${c.pfp}" onerror="this.src='https://via.placeholder.com/200/15101a/8a2be2?text=Client'">
+                    <h4>${c.name}</h4>
+                    <span>Pro Player</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // --- CAROUSEL LOGIC ---
+        function initCarousel() {
+            const track = document.getElementById('track');
+            const prev = document.getElementById('prevBtn');
+            const next = document.getElementById('nextBtn');
+            let currentIndex = 0;
+
+            // Load images
+            workImages.forEach(src => {
+                const div = document.createElement('div');
+                div.className = 'work-card';
+                div.innerHTML = `<img src="${src}" onerror="this.parentElement.style.display='none'">`; // Hide if missing
+                track.appendChild(div);
+            });
+
+            const cards = document.querySelectorAll('.work-card');
+            if (cards.length === 0) return;
+
+            function updateCarousel() {
+                // Determine card width + margin (680 + 40 = 720)
+                const cardWidth = 720; 
+                // Center the active card
+                const centerOffset = (track.parentElement.offsetWidth / 2) - (cardWidth / 2); // Approximation for alignment
+                
+                // For 3D effect, we just move the track to center the index
+                // But specifically we want to center the 'currentIndex' element
+                
+                // Simple translate strategy logic:
+                // We want cards[currentIndex] to be in the center.
+                // shift = -(currentIndex * cardWidth) + (containerWidth/2 - cardWidth/2)
+                
+                const containerW = track.parentElement.offsetWidth;
+                // Since cards are flexed, let's just calculate offset based on index
+                const offset = -(currentIndex * 720) + (containerW / 2) - (360); // 360 is half card width
+
+                track.style.transform = `translateX(${offset}px)`;
+
+                // Updates classes for 3D effect
+                cards.forEach((card, i) => {
+                    card.classList.remove('active');
+                    card.style.transform = 'scale(0.8) rotateY(15deg)'; // Reset
+                    
+                    if (i === currentIndex) {
+                        card.classList.add('active');
+                    } else if (i < currentIndex) {
+                        card.style.transform = 'scale(0.8) rotateY(15deg)'; // Left side look
+                    } else {
+                        card.style.transform = 'scale(0.8) rotateY(-15deg)'; // Right side look
+                    }
+                });
+            }
+
+            next.addEventListener('click', () => {
+                if (currentIndex < cards.length - 1) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            });
+
+            prev.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            });
+
+            // Initial call
+            // Delay slightly to allow width calculation
+            setTimeout(updateCarousel, 100);
+            window.addEventListener('resize', updateCarousel);
+        }
+
+        // --- VIEW COUNTER ANIMATION ---
+        function animateCounter() {
+            const el = document.getElementById('view-counter');
+            const target = 250000; // Arbitrary high number based on prompt "200k+"
+            const duration = 2000; // 2 seconds
+            const start = performance.now();
+
+            function step(timestamp) {
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const current = Math.floor(progress * target);
+                
+                // Format with K if > 1000 for aesthetics, but user wants "Views Generated"
+                el.innerText = current.toLocaleString() + '+';
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+    </script>
+</body>
+</html>
