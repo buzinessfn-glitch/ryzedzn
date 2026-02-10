@@ -45,7 +45,7 @@
             background: #300a4d;
             border-radius: 50%;
             pointer-events: none;
-            z-index: 9999;
+            z-index: 10000; /* Above Lightbox */
             transform: translate(-50%, -50%);
             mix-blend-mode: exclusion;
             transition: width 0.2s, height 0.2s;
@@ -364,6 +364,7 @@
             border-radius: 10px;
             overflow: hidden;
             background: #000;
+            position: relative;
         }
 
         .work-card.active {
@@ -377,7 +378,7 @@
         .work-card img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures no cropping inside container, container matches size */
+            object-fit: cover; 
         }
 
         .carousel-controls {
@@ -405,6 +406,64 @@
             background: var(--fire-orange);
             transform: scale(1.1);
             border-color: var(--fire-gold);
+        }
+
+        /* --- LIGHTBOX (ENLARGING) --- */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(2, 0, 5, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9995;
+            display: none; /* Controlled by JS */
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        #lightbox.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 85%;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid var(--fire-gold);
+            box-shadow: 0 0 50px var(--neon-purple);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+
+        .lightbox-content img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 85vh;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 300;
+            transition: 0.3s;
+        }
+
+        .lightbox-close:hover {
+            color: var(--fire-orange);
         }
 
         /* --- SECTION TITLES --- */
@@ -513,6 +572,13 @@
         </div>
     </section>
 
+    <div id="lightbox">
+        <div class="lightbox-content">
+            <span class="lightbox-close">&times; Close</span>
+            <img src="" id="lightbox-img" alt="Enlarged View">
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 Ryzedzn. All Rights Reserved.</p>
     </footer>
@@ -531,7 +597,7 @@
             { name: 'Momsy', pfp: 'momsypfp.jpg' }
         ];
 
-        // 15 Work Images in specified order
+        // 15 Work Images
         const workImages = [
             'ryzework14.jpg',
             'ryzework15.jpg',
@@ -546,6 +612,7 @@
             renderClients();
             initCarousel();
             animateCounter();
+            initLightbox();
         });
 
         // --- CURSOR LOGIC ---
@@ -560,23 +627,25 @@
             });
 
             function animate() {
-                // Smooth trailing effect
                 cursorX += (mouseX - cursorX) * 0.15;
                 cursorY += (mouseY - cursorY) * 0.15;
-                
                 cursor.style.left = cursorX + 'px';
                 cursor.style.top = cursorY + 'px';
-                
                 requestAnimationFrame(animate);
             }
             animate();
 
-            // Hover effects
-            const hoverTargets = document.querySelectorAll('a, button, .client-polaroid, .work-card');
-            hoverTargets.forEach(el => {
-                el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
-                el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
-            });
+            // Dynamic hover delegation
+            document.addEventListener('mouseenter', (e) => {
+                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close')) {
+                    cursor.classList.add('cursor-hover');
+                }
+            }, true);
+            document.addEventListener('mouseleave', (e) => {
+                if(e.target.closest('a, button, .client-polaroid, .work-card, .lightbox-close')) {
+                    cursor.classList.remove('cursor-hover');
+                }
+            }, true);
         }
 
         // --- HERO CRACK ANIMATION ---
@@ -584,31 +653,22 @@
             const topText = document.getElementById('text-top');
             const botText = document.getElementById('text-bottom');
             const core = document.getElementById('void-core');
-            const wrapper = document.getElementById('hero-wrapper');
             const stickyHeight = window.innerHeight;
 
             window.addEventListener('scroll', () => {
                 const scrolled = window.scrollY;
-                const maxScroll = stickyHeight * 0.5; // When animation finishes
-                
-                // Calculate percentage of scroll (0 to 1)
+                const maxScroll = stickyHeight * 0.5;
                 let progress = Math.min(scrolled / maxScroll, 1);
 
-                // Movement values
-                const moveY = progress * 150; // Move text apart by 150px
-                const rotate = progress * 5;  // Slight tilt for realism
-                const opacity = 1 - (progress * 1.5); // Fade text out eventually
+                const moveY = progress * 150;
+                const rotate = progress * 5;
+                const opacity = 1 - (progress * 1.5);
 
-                // Apply Transforms
-                // Top goes up and tilts left, Bottom goes down and tilts right
                 topText.style.transform = `translateY(-${moveY}%) rotate(-${rotate}deg)`;
                 botText.style.transform = `translateY(${moveY}%) rotate(${rotate}deg)`;
-                
-                // Fade out text pieces as they separate
                 topText.style.opacity = Math.max(opacity, 0);
                 botText.style.opacity = Math.max(opacity, 0);
 
-                // Reveal Core Content (Reverse of text fade)
                 if (progress > 0.3) {
                     core.classList.add('revealed');
                     core.style.pointerEvents = "auto";
@@ -622,14 +682,11 @@
         // --- RENDER CLIENTS (PINBOARD) ---
         function renderClients() {
             const grid = document.getElementById('client-grid');
-            clients.forEach((c, index) => {
+            clients.forEach((c) => {
                 const div = document.createElement('div');
                 div.className = 'client-polaroid';
-                
-                // Random rotation between -6deg and 6deg for pinboard feel
                 const randomRot = Math.random() * 12 - 6; 
                 div.style.transform = `rotate(${randomRot}deg)`;
-
                 div.innerHTML = `
                     <div class="pin"></div>
                     <img src="${c.pfp}" onerror="this.src='https://via.placeholder.com/200/15101a/8a2be2?text=Client'">
@@ -647,11 +704,10 @@
             const next = document.getElementById('nextBtn');
             let currentIndex = 0;
 
-            // Load images
             workImages.forEach(src => {
                 const div = document.createElement('div');
                 div.className = 'work-card';
-                div.innerHTML = `<img src="${src}" onerror="this.parentElement.style.display='none'">`; // Hide if missing
+                div.innerHTML = `<img src="${src}" onerror="this.parentElement.style.display='none'">`;
                 track.appendChild(div);
             });
 
@@ -659,76 +715,76 @@
             if (cards.length === 0) return;
 
             function updateCarousel() {
-                // Determine card width + margin (680 + 40 = 720)
-                const cardWidth = 720; 
-                // Center the active card
-                const centerOffset = (track.parentElement.offsetWidth / 2) - (cardWidth / 2); // Approximation for alignment
-                
-                // For 3D effect, we just move the track to center the index
-                // But specifically we want to center the 'currentIndex' element
-                
-                // Simple translate strategy logic:
-                // We want cards[currentIndex] to be in the center.
-                // shift = -(currentIndex * cardWidth) + (containerWidth/2 - cardWidth/2)
-                
                 const containerW = track.parentElement.offsetWidth;
-                // Since cards are flexed, let's just calculate offset based on index
-                const offset = -(currentIndex * 720) + (containerW / 2) - (360); // 360 is half card width
+                const offset = -(currentIndex * 720) + (containerW / 2) - (360); 
 
                 track.style.transform = `translateX(${offset}px)`;
 
-                // Updates classes for 3D effect
                 cards.forEach((card, i) => {
                     card.classList.remove('active');
-                    card.style.transform = 'scale(0.8) rotateY(15deg)'; // Reset
-                    
                     if (i === currentIndex) {
                         card.classList.add('active');
+                        card.style.transform = 'scale(1) rotateY(0deg)';
                     } else if (i < currentIndex) {
-                        card.style.transform = 'scale(0.8) rotateY(15deg)'; // Left side look
+                        card.style.transform = 'scale(0.8) rotateY(15deg)';
                     } else {
-                        card.style.transform = 'scale(0.8) rotateY(-15deg)'; // Right side look
+                        card.style.transform = 'scale(0.8) rotateY(-15deg)';
                     }
                 });
             }
 
-            next.addEventListener('click', () => {
-                if (currentIndex < cards.length - 1) {
-                    currentIndex++;
-                    updateCarousel();
-                }
-            });
+            next.addEventListener('click', () => { if (currentIndex < cards.length - 1) { currentIndex++; updateCarousel(); } });
+            prev.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updateCarousel(); } });
 
-            prev.addEventListener('click', () => {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    updateCarousel();
-                }
-            });
-
-            // Initial call
-            // Delay slightly to allow width calculation
             setTimeout(updateCarousel, 100);
             window.addEventListener('resize', updateCarousel);
+        }
+
+        // --- LIGHTBOX LOGIC ---
+        function initLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const closeBtn = document.querySelector('.lightbox-close');
+
+            // Open lightbox on card click
+            document.addEventListener('click', (e) => {
+                const card = e.target.closest('.work-card');
+                if (card) {
+                    const img = card.querySelector('img');
+                    lightboxImg.src = img.src;
+                    lightbox.style.display = 'flex';
+                    setTimeout(() => lightbox.classList.add('active'), 10);
+                    document.body.style.overflow = 'hidden'; // Prevent scroll
+                }
+            });
+
+            // Close logic
+            const closeLightbox = () => {
+                lightbox.classList.remove('active');
+                setTimeout(() => {
+                    lightbox.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }, 400);
+            };
+
+            closeBtn.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) closeLightbox();
+            });
         }
 
         // --- VIEW COUNTER ANIMATION ---
         function animateCounter() {
             const el = document.getElementById('view-counter');
-            const target = 250000; // Arbitrary high number based on prompt "200k+"
-            const duration = 2000; // 2 seconds
+            const target = 250000;
+            const duration = 2000;
             const start = performance.now();
 
             function step(timestamp) {
                 const progress = Math.min((timestamp - start) / duration, 1);
                 const current = Math.floor(progress * target);
-                
-                // Format with K if > 1000 for aesthetics, but user wants "Views Generated"
                 el.innerText = current.toLocaleString() + '+';
-
-                if (progress < 1) {
-                    requestAnimationFrame(step);
-                }
+                if (progress < 1) requestAnimationFrame(step);
             }
             requestAnimationFrame(step);
         }
