@@ -359,16 +359,6 @@
             font-weight: 700;
         }
 
-        /* Controls */
-        .roulette-controls {
-            display: none;
-        }
-
-        /* Selected client display */
-        .selected-display {
-            display: none;
-        }
-
         /* --- WORK CAROUSEL --- */
         #work-section {
             padding: 100px 0;
@@ -543,7 +533,86 @@
             transform: rotate(45deg);
         }
 
-        /* --- LIGHTBOX --- */
+        /* --- LIGHTBOX & PROFILE MODAL --- */
+        #profile-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(2, 0, 5, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9996;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #profile-modal.active { display: flex; opacity: 1; }
+
+        .profile-modal-content {
+            position: relative;
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .profile-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 300;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .profile-modal-close:hover { color: var(--fire-orange); }
+
+        .profile-modal-close::before {
+            content: '×';
+        }
+
+        .profile-modal-pfp {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--fire-gold);
+            margin-bottom: 20px;
+        }
+
+        .profile-modal-name {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--fire-gold);
+            margin-bottom: 20px;
+        }
+
+        .profile-modal-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(255, 140, 0, 0.2));
+            border: 1px solid var(--fire-gold);
+            color: var(--fire-gold);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+        .profile-modal-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+            transform: scale(1.05);
+        }
+
         #lightbox {
             position: fixed;
             top: 0; left: 0;
@@ -723,8 +792,6 @@
         <p class="section-sub">Invest in Quality</p>
 
         <div class="pricing-grid">
-            <!-- £6 card removed as requested -->
-
             <div class="price-card featured">
                 <div class="featured-label">POPULAR</div>
                 <h3>Fortnite Comp</h3>
@@ -754,6 +821,16 @@
             <div class="lightbox-btn-container" id="lightbox-btn-container">
                 <a href="#" target="_blank" id="lightbox-link" class="btn-fire" style="font-size: 0.8rem; padding: 10px 30px;">Check him out</a>
             </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal">
+        <div class="profile-modal-content">
+            <span class="profile-modal-close" id="profile-modal-close"></span>
+            <img src="" id="profile-modal-pfp" class="profile-modal-pfp" alt="Profile Picture">
+            <div class="profile-modal-name" id="profile-modal-name"></div>
+            <a href="#" target="_blank" id="profile-modal-link" class="profile-modal-btn">Go to Profile</a>
         </div>
     </div>
 
@@ -806,6 +883,7 @@
             initCarousel();
             animateCounter();
             initLightbox();
+            initProfileModal();
         });
 
         // ===================== HERO =====================
@@ -841,13 +919,9 @@
         // ===================== ROULETTE =====================
         function initRoulette() {
             const strip      = document.getElementById('roulette-strip');
-            const display    = document.getElementById('selected-display');
-
             const CHIP_W     = 160; // px chip width
             const CHIP_GAP   = 20;  // px gap
             const CHIP_STEP  = CHIP_W + CHIP_GAP;
-
-            // Triple the client list so we always have overflow in both directions
             const looped = [...clients, ...clients, ...clients];
             let chips    = [];
 
@@ -868,8 +942,6 @@
             const viewport    = strip.parentElement;
             let vpWidth       = viewport.offsetWidth;
             const totalChips  = looped.length;
-
-            // Centre offset: position strip so middle client set is visible
             const midSetStart   = clients.length * CHIP_STEP;
             const viewportCenter = vpWidth / 2 - CHIP_W / 2;
             let currentOffset   = -(midSetStart - viewportCenter);
@@ -884,7 +956,6 @@
             }
 
             function getHighlightedIndex() {
-                // Which chip centre is closest to viewport centre?
                 const centre = vpWidth / 2;
                 let best = 0, bestDist = Infinity;
                 chips.forEach((chip, i) => {
@@ -908,7 +979,6 @@
             function drift(ts) {
                 if (lastTs !== null) {
                     currentOffset -= driftSpeed;
-                    // Loop: if drifted too far left, jump back by one full set
                     const minOffset = -(clients.length * 2 * CHIP_STEP) + viewportCenter;
                     const maxOffset = viewportCenter;
                     if (currentOffset < minOffset) currentOffset += clients.length * CHIP_STEP;
@@ -930,12 +1000,42 @@
             highlightCenter();
             startDrift();
 
+            // Click on chip to open profile modal
+            chips.forEach((chip, idx) => {
+                chip.addEventListener('click', () => {
+                    const client = clients[idx % clients.length];
+                    document.getElementById('profile-modal-pfp').src = client.pfp;
+                    document.getElementById('profile-modal-name').textContent = client.name;
+                    document.getElementById('profile-modal-link').href = client.x;
+                    document.getElementById('profile-modal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
             // Resize handling
             window.addEventListener('resize', () => {
                 vpWidth         = viewport.offsetWidth;
                 const newCentre = vpWidth / 2 - CHIP_W / 2;
                 currentOffset  += (newCentre - viewportCenter);
                 applyOffset(currentOffset, false);
+            });
+        }
+
+        // ===================== PROFILE MODAL =====================
+        function initProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            const closeBtn = document.getElementById('profile-modal-close');
+
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => { document.body.style.overflow = 'auto'; }, 400);
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    setTimeout(() => { document.body.style.overflow = 'auto'; }, 400);
+                }
             });
         }
 
